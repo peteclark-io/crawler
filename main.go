@@ -2,6 +2,7 @@ package main
 
 import (
 	"net/http"
+	"net/url"
 	"os"
 
 	"github.com/jawher/mow.cli"
@@ -23,12 +24,19 @@ func main() {
 		log.WithField("rootURL", *rootURL).Info("Starting web crawler")
 
 		client := &http.Client{}
-
-		robots, err := retrieveRobotsTxt(client, *rootURL+"/robots.txt")
+		root, err := url.Parse(*rootURL)
 		if err != nil {
-			log.WithError(err).WithField("rootURL", *rootURL).Fatal("Failed to retrieve robots.txt, does this domain even exist?")
+			log.WithError(err).Fatal("Failed to parse provided url")
 		}
 
+		links, err := crawler(client, root)
+		if err != nil {
+			log.WithError(err).Fatal("Failed to crawl provided url")
+		}
+
+		for _, l := range links {
+			os.Stdout.WriteString(l.String())
+		}
 	}
 
 	log.SetLevel(log.InfoLevel)
