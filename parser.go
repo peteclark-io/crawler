@@ -4,11 +4,13 @@ import (
 	"errors"
 	"io"
 	"net/url"
+	"strings"
 
 	"golang.org/x/net/html"
 )
 
 var errExternalURL = errors.New("provided href points to an external domain")
+var errUnsupportedScheme = errors.New("provided href uses a non-http scheme, which we don't support")
 
 func parser(r io.Reader) ([]string, error) {
 	z := html.NewTokenizer(r)
@@ -44,6 +46,10 @@ func parser(r io.Reader) ([]string, error) {
 }
 
 func parseURL(root *url.URL, href string) (*url.URL, error) {
+	if !strings.HasSuffix(href, "/") {
+		href = href + "/"
+	}
+
 	u, err := url.Parse(href)
 	if err != nil {
 		return nil, err
@@ -53,7 +59,9 @@ func parseURL(root *url.URL, href string) (*url.URL, error) {
 		return nil, errExternalURL
 	}
 
-	u.Host = root.Host
-	u.Scheme = root.Scheme
-	return u, nil
+	if u.IsAbs() && u.Scheme != "https" && u.Scheme != "http" {
+		return nil, errUnsupportedScheme
+	}
+
+	return root.ResolveReference(u), nil
 }
