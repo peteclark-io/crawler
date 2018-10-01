@@ -23,7 +23,7 @@ func (c *crawler) crawlRoot(root *Link) *Links {
 
 	err := c.crawlLink(root)
 	if err != nil {
-		log.WithError(err).Error("Failed to crawl link")
+		log.WithError(err).Error("Failed to crawl root link")
 	}
 
 	c.wg.Wait()
@@ -45,6 +45,7 @@ func (c *crawler) crawlLink(link *Link) error {
 	}
 
 	defer resp.Body.Close()
+
 	hrefs, err := parser(resp.Body)
 	if err != nil {
 		return err
