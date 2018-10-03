@@ -8,7 +8,7 @@ import (
 
 type Link struct {
 	sync.RWMutex
-	Parent   *Link            `json:"parent"`
+	Parents  map[string]*Link `json:"parents"`
 	URL      *url.URL         `json:"url"`
 	Children map[string]*Link `json:"children"`
 }
@@ -18,9 +18,22 @@ type Links struct {
 	Data map[string]*Link
 }
 
-func (l *Links) add(link *Link) bool {
+func newLinks() *Links {
+	return &Links{Data: make(map[string]*Link)}
+}
+
+func (l *Links) add(parent *Link, link *Link) bool {
 	if link.URL == nil || l.Data == nil {
 		log.Fatal("Please provide a link containing a URL and/or properly initialise the Links struct")
+	}
+
+	if parent != nil && parent.URL.Path == link.URL.Path {
+		return true
+	}
+
+	if parent != nil {
+		parent.addChild(link)
+		link.addParent(parent)
 	}
 
 	if l.linkAlreadyProcessed(link) {
@@ -32,10 +45,6 @@ func (l *Links) add(link *Link) bool {
 
 	l.Data[link.URL.Path] = link
 
-	if link.Parent != nil {
-		link.Parent.addChild(link)
-	}
-
 	return false
 }
 
@@ -45,6 +54,13 @@ func (l *Links) linkAlreadyProcessed(link *Link) bool {
 
 	_, ok := l.Data[link.URL.Path]
 	return ok
+}
+
+func (l *Link) addParent(parent *Link) {
+	l.Lock()
+	defer l.Unlock()
+
+	l.Parents[parent.URL.Path] = parent
 }
 
 func (l *Link) addChild(child *Link) {

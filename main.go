@@ -36,6 +36,7 @@ func main() {
 		c.crawlRoot(rootLink)
 
 		log.WithField("total", len(c.links.Data)).WithField("duration", time.Now().Sub(start).String()).Info("Crawling complete")
+		displayLink(rootLink, "  ")
 	}
 
 	log.SetLevel(log.InfoLevel)
@@ -44,4 +45,25 @@ func main() {
 		log.Errorf("App could not start, error=[%s]\n", err)
 		return
 	}
+}
+
+func displayLinks(links *Links) {
+	for _, l := range links.Data {
+		displayLink(l, "")
+	}
+}
+
+func displayLink(link *Link, spacer string) {
+	if len(link.Children) > 0 {
+		os.Stdout.WriteString(spacer + "- " + normalize(link.URL) + " ->\r\n")
+		for _, child := range link.Children {
+			displayLink(child, spacer+"  ")
+		}
+	} else {
+		os.Stdout.WriteString(spacer + "- " + normalize(link.URL) + "\r\n")
+	}
+}
+
+func normalize(u *url.URL) string {
+	return u.Scheme + "://" + u.Host + u.Path
 }

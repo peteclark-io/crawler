@@ -14,12 +14,12 @@ type crawler struct {
 }
 
 func newCrawler(client *http.Client) *crawler {
-	links := &Links{Data: make(map[string]*Link)}
+	links := newLinks()
 	return &crawler{client: client, links: links, wg: &sync.WaitGroup{}}
 }
 
 func (c *crawler) crawlRoot(root *Link) *Links {
-	c.links.add(root)
+	c.links.add(nil, root)
 
 	err := c.crawlLink(root)
 	if err != nil {
@@ -57,9 +57,9 @@ func (c *crawler) crawlLink(link *Link) error {
 			continue
 		}
 
-		l := &Link{URL: child, Parent: link, Children: make(map[string]*Link)}
+		l := &Link{URL: child, Parents: make(map[string]*Link), Children: make(map[string]*Link)}
+		ok := c.links.add(link, l)
 
-		ok := c.links.add(l)
 		if !ok {
 			c.wg.Add(1)
 			go func() {

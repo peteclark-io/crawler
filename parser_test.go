@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -47,4 +48,12 @@ func BenchmarkParser(b *testing.B) {
 			continue
 		}
 	}
+}
+
+func TestParseURL(t *testing.T) {
+	root, _ := url.Parse("https://monzo.com/blog/")
+	u, err := parseURL(root, "latest")
+	require.NoError(t, err)
+
+	t.Log(u.Scheme + "://" + u.Host + u.Path)
 }
