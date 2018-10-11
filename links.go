@@ -22,30 +22,40 @@ func newLinks() *Links {
 	return &Links{Data: make(map[string]*Link)}
 }
 
+func newLink(uri *url.URL) *Link {
+	return &Link{URL: uri, Parents: make(map[string]*Link), Children: make(map[string]*Link)}
+}
+
 func (l *Links) add(parent *Link, link *Link) bool {
 	if link.URL == nil || l.Data == nil {
 		log.Fatal("Please provide a link containing a URL and/or properly initialise the Links struct")
 	}
 
-	if parent != nil && parent.URL.Path == link.URL.Path {
+	if parent == nil {
+		l.addLink(link) // short circuit early, as this must be the root url
+		return false
+	}
+
+	if parent.URL.Path == link.URL.Path {
 		return true
 	}
 
-	if parent != nil {
-		parent.addChild(link)
-		link.addParent(parent)
-	}
+	parent.addChild(link)
+	link.addParent(parent)
 
 	if l.linkAlreadyProcessed(link) {
 		return true
 	}
 
+	l.addLink(link)
+	return false
+}
+
+func (l *Links) addLink(link *Link) {
 	l.Lock()
 	defer l.Unlock()
 
 	l.Data[link.URL.Path] = link
-
-	return false
 }
 
 func (l *Links) linkAlreadyProcessed(link *Link) bool {

@@ -4,18 +4,22 @@ import (
 	"net/http"
 	"sync"
 
+	"github.com/samclarke/robotstxt"
 	log "github.com/sirupsen/logrus"
 )
 
+const userAgent = "peteclark-io/crawler"
+
 type crawler struct {
-	client *http.Client
-	links  *Links
-	wg     *sync.WaitGroup
+	client    *http.Client
+	links     *Links
+	wg        *sync.WaitGroup
+	robotsTxt *robotstxt.RobotsTxt
 }
 
-func newCrawler(client *http.Client) *crawler {
+func newCrawler(client *http.Client, r *robotstxt.RobotsTxt) *crawler {
 	links := newLinks()
-	return &crawler{client: client, links: links, wg: &sync.WaitGroup{}}
+	return &crawler{client: client, links: links, robotsTxt: r, wg: &sync.WaitGroup{}}
 }
 
 func (c *crawler) crawlRoot(root *Link) *Links {
@@ -27,17 +31,31 @@ func (c *crawler) crawlRoot(root *Link) *Links {
 	}
 
 	c.wg.Wait()
-
 	return c.links
 }
 
+func (c *crawler) checkLinkAgainstRobotsTxt(link *Link) bool {
+	if c.robotsTxt == nil {
+		return true // if no robots txt, go ahead and crawl anyway
+	}
+
+	ok, err := c.robotsTxt.IsAllowed(userAgent, link.URL.String())
+	if err != nil {
+		log.WithError(err).WithField("url", link.URL.String()).Warn("Robots txt failed to check link")
+		return true // crawl anyway if robots.txt failed to check the link
+	}
+	return ok
+}
+
 func (c *crawler) crawlLink(link *Link) error {
-	log.WithField("url", link.URL.String()).Info("crawling new link")
+	log.WithField("url", link.URL.String()).Info("crawling link")
 
 	req, err := http.NewRequest("GET", link.URL.String(), nil)
 	if err != nil {
 		return err
 	}
+
+	req.Header.Add("User-Agent", userAgent)
 
 	resp, err := c.client.Do(req)
 	if err != nil {
@@ -57,14 +75,21 @@ func (c *crawler) crawlLink(link *Link) error {
 			continue
 		}
 
-		l := &Link{URL: child, Parents: make(map[string]*Link), Children: make(map[string]*Link)}
-		ok := c.links.add(link, l)
+		l := newLink(child)
+
+		ok := c.checkLinkAgainstRobotsTxt(l)
+		if !ok {
+			log.WithField("url", link.URL.String()).Info("not allowed to crawl link")
+			continue
+		}
+
+		ok = c.links.add(link, l)
 
 		if !ok {
 			c.wg.Add(1)
 			go func() {
+				defer c.wg.Done()
 				c.crawlLink(l)
-				c.wg.Done()
 			}()
 		}
 	}

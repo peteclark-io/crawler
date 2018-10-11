@@ -31,12 +31,12 @@ func main() {
 			log.WithError(err).Fatal("Failed to parse provided url")
 		}
 
-		rootLink := &Link{URL: root, Children: make(map[string]*Link)}
-		c := newCrawler(client)
-		c.crawlRoot(rootLink)
+		rootLink := newLink(root)
+		c := newCrawler(client, nil)
+		links := c.crawlRoot(rootLink)
 
-		log.WithField("total", len(c.links.Data)).WithField("duration", time.Now().Sub(start).String()).Info("Crawling complete")
-		displayLink(rootLink, "  ")
+		log.WithField("total", len(links.Data)).WithField("duration", time.Now().Sub(start).String()).Info("Crawling complete")
+		displayLinks(os.Stdout, links)
 	}
 
 	log.SetLevel(log.InfoLevel)
@@ -45,25 +45,4 @@ func main() {
 		log.Errorf("App could not start, error=[%s]\n", err)
 		return
 	}
-}
-
-func displayLinks(links *Links) {
-	for _, l := range links.Data {
-		displayLink(l, "")
-	}
-}
-
-func displayLink(link *Link, spacer string) {
-	if len(link.Children) > 0 {
-		os.Stdout.WriteString(spacer + "- " + normalize(link.URL) + " ->\r\n")
-		for _, child := range link.Children {
-			displayLink(child, spacer+"  ")
-		}
-	} else {
-		os.Stdout.WriteString(spacer + "- " + normalize(link.URL) + "\r\n")
-	}
-}
-
-func normalize(u *url.URL) string {
-	return u.Scheme + "://" + u.Host + u.Path
 }

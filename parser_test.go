@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -20,9 +21,7 @@ func TestParser(t *testing.T) {
 
 	hrefs, err := parser(resp.Body)
 	require.NoError(t, err)
-
 	assert.NotEmpty(t, hrefs)
-	t.Log(hrefs)
 }
 
 func BenchmarkParser(b *testing.B) {
@@ -55,5 +54,29 @@ func TestParseURL(t *testing.T) {
 	u, err := parseURL(root, "latest")
 	require.NoError(t, err)
 
-	t.Log(u.Scheme + "://" + u.Host + u.Path)
+	assert.Equal(t, root.Scheme, u.Scheme)
+	assert.Equal(t, root.Host, u.Host)
+	assert.Equal(t, root.Path+"latest/", u.Path)
+	assert.True(t, strings.HasSuffix(u.Path, "/"), "We require a trailing slash")
+}
+
+func TestParseURL__InvalidURL(t *testing.T) {
+	root, _ := url.Parse("https://monzo.com/blog/")
+	_, err := parseURL(root, ":#")
+
+	assert.EqualError(t, err, "parse :: missing protocol scheme")
+}
+
+func TestParseURL__ErrorsForExternalURLs(t *testing.T) {
+	root, _ := url.Parse("https://monzo.com/blog/")
+	_, err := parseURL(root, "https://github.com/")
+
+	assert.EqualError(t, err, errExternalURL.Error())
+}
+
+func TestParseURL__ErrorsForNonHTTPSchemes(t *testing.T) {
+	root, _ := url.Parse("https://monzo.com/blog/")
+	_, err := parseURL(root, "mailto://git@monzo.com")
+
+	assert.EqualError(t, err, errUnsupportedScheme.Error())
 }
