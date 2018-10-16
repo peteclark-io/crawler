@@ -21,7 +21,7 @@ To build the docker image:
 docker build -t crawler:local .
 ```
 
-## Usage
+## Usage
 
 With the docker image:
 
