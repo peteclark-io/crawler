@@ -1,4 +1,4 @@
-package main
+package pkg
 
 import (
 	"net/http"
@@ -17,12 +17,12 @@ type crawler struct {
 	robotsTxt *robotstxt.RobotsTxt
 }
 
-func newCrawler(client *http.Client, r *robotstxt.RobotsTxt) *crawler {
-	links := newLinks()
+func NewCrawler(client *http.Client, r *robotstxt.RobotsTxt) *crawler {
+	links := NewLinks()
 	return &crawler{client: client, links: links, robotsTxt: r, wg: &sync.WaitGroup{}}
 }
 
-func (c *crawler) crawlRoot(root *Link) *Links {
+func (c *crawler) CrawlRoot(root *Link) *Links {
 	c.links.add(nil, root)
 
 	err := c.crawlLink(root)
@@ -75,7 +75,7 @@ func (c *crawler) crawlLink(link *Link) error {
 			continue
 		}
 
-		l := newLink(child)
+		l := NewLink(child)
 
 		ok := c.checkLinkAgainstRobotsTxt(l)
 		if !ok {

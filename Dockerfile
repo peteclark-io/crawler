@@ -5,7 +5,7 @@ COPY . ${SRC_FOLDER}
 WORKDIR ${SRC_FOLDER}
 
 RUN apk --no-cache add git curl \
-  && CGO_ENABLED=0 go build -a -o /artifacts/crawler
+  && CGO_ENABLED=0 go build -a -o /artifacts/crawler ./bin/crawler
 
 # Multi-stage build - copy only the certs and the binary into the image
 FROM scratch

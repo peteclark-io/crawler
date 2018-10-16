@@ -1,4 +1,4 @@
-package main
+package pkg
 
 import (
 	"log"
@@ -18,11 +18,11 @@ type Links struct {
 	Data map[string]*Link
 }
 
-func newLinks() *Links {
+func NewLinks() *Links {
 	return &Links{Data: make(map[string]*Link)}
 }
 
-func newLink(uri *url.URL) *Link {
+func NewLink(uri *url.URL) *Link {
 	return &Link{URL: uri, Parents: make(map[string]*Link), Children: make(map[string]*Link)}
 }
 

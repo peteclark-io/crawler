@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/jawher/mow.cli"
+	"github.com/peteclark-io/crawler/pkg"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -31,12 +32,12 @@ func main() {
 			log.WithError(err).Fatal("Failed to parse provided url")
 		}
 
-		rootLink := newLink(root)
-		c := newCrawler(client, nil)
-		links := c.crawlRoot(rootLink)
+		rootLink := pkg.NewLink(root)
+		c := pkg.NewCrawler(client, nil)
+		links := c.CrawlRoot(rootLink)
 
 		log.WithField("total", len(links.Data)).WithField("duration", time.Now().Sub(start).String()).Info("Crawling complete")
-		displayLinks(os.Stdout, links)
+		pkg.DisplayLinks(os.Stdout, links)
 	}
 
 	log.SetLevel(log.InfoLevel)

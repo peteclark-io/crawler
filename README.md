@@ -6,13 +6,13 @@ Using regular go build:
 
 ```
 go get -u github.com/peteclark-io/crawler
-go build
+go build ./bin/crawler
 ```
 
 Using go modules, first git clone the repo to a directory outside the $GOPATH, and ensure you are using go 1.11+, then:
 
 ```
-go build
+go build ./bin/crawler
 ```
 
 To build the docker image:

@@ -1,4 +1,4 @@
-package main
+package pkg
 
 import (
 	"net/http"
@@ -46,12 +46,12 @@ func TestCrawler(t *testing.T) {
 	server := serveTestSite(t)
 	defer server.Close()
 
-	c := newCrawler(client, nil)
+	c := NewCrawler(client, nil)
 
 	u, err := url.Parse(server.URL + fakeSiteRoot)
 	require.NoError(t, err)
 
-	links := c.crawlRoot(newLink(u))
+	links := c.CrawlRoot(NewLink(u))
 	assert.Len(t, links.Data, 3)
 	assert.NotNil(t, links.Data["/"])
 	assert.NotNil(t, links.Data["/virus/"])
@@ -66,12 +66,12 @@ func TestCrawler__RobotsTxtUsed(t *testing.T) {
 	robots, err := retrieveRobotsTxt(client, server.URL+robotsTxtPath)
 	require.NoError(t, err)
 
-	c := newCrawler(client, robots)
+	c := NewCrawler(client, robots)
 
 	u, err := url.Parse(server.URL + fakeSiteRoot)
 	require.NoError(t, err)
 
-	links := c.crawlRoot(newLink(u))
+	links := c.CrawlRoot(NewLink(u))
 	require.Len(t, links.Data, 2)
 	assert.NotNil(t, links.Data["/"])
 	assert.NotNil(t, links.Data["/virus/"])

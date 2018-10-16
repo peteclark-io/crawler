@@ -1,4 +1,4 @@
-package main
+package pkg
 
 import (
 	"net/url"
@@ -15,11 +15,11 @@ func init() {
 }
 
 func TestLinks__AddRootLink(t *testing.T) {
-	l := newLinks()
+	l := NewLinks()
 	u, err := parseURL(monzoURL, "/blog/latest/1/")
 	require.NoError(t, err)
 
-	expectedLink := newLink(u)
+	expectedLink := NewLink(u)
 
 	ok := l.add(nil, expectedLink)
 
@@ -32,12 +32,12 @@ func TestLinks__AddRootLink(t *testing.T) {
 }
 
 func TestLinks__AddLink(t *testing.T) {
-	l := newLinks()
+	l := NewLinks()
 	u, err := parseURL(monzoURL, "/blog/latest/1/")
 	require.NoError(t, err)
 
-	parentLink := newLink(monzoURL)
-	expectedLink := newLink(u)
+	parentLink := NewLink(monzoURL)
+	expectedLink := NewLink(u)
 
 	ok := l.add(parentLink, expectedLink)
 
@@ -58,10 +58,10 @@ func TestLinks__AddLink(t *testing.T) {
 }
 
 func TestLinks__AddLinkChecksParentAndChildMatch(t *testing.T) {
-	l := newLinks()
+	l := NewLinks()
 
-	parentLink := newLink(monzoURL)
-	matchingLink := newLink(monzoURL)
+	parentLink := NewLink(monzoURL)
+	matchingLink := NewLink(monzoURL)
 
 	ok := l.add(parentLink, matchingLink)
 	assert.True(t, ok)
@@ -69,13 +69,13 @@ func TestLinks__AddLinkChecksParentAndChildMatch(t *testing.T) {
 }
 
 func TestLinks__AddLinkIsIdempotent(t *testing.T) {
-	l := newLinks()
+	l := NewLinks()
 
 	u, err := parseURL(monzoURL, "/blog/latest/1/")
 	require.NoError(t, err)
 
-	parentLink := newLink(monzoURL)
-	expectedLink := newLink(u)
+	parentLink := NewLink(monzoURL)
+	expectedLink := NewLink(u)
 
 	ok := l.add(parentLink, expectedLink)
 	assert.False(t, ok)

@@ -1,12 +1,12 @@
-package main
+package pkg
 
 import (
 	"io"
 	"net/url"
 )
 
-// Displays links in a flat parent -> child style
-func displayLinks(w io.Writer, links *Links) {
+// DisplayLinks Displays links in a flat parent -> child style
+func DisplayLinks(w io.Writer, links *Links) {
 	for _, l := range links.Data {
 		if len(l.Children) > 0 {
 			displayParent(w, l, "")
